@@ -1,11 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Layout } from '../components/Layout'
 import { useEntries } from '../hooks/useEntries'
 import { useEmployees } from '../hooks/useEmployees'
-import { supabase } from '../lib/supabase'
 
 export function SalarySheet() {
-  const [profile, setProfile] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -21,28 +19,10 @@ export function SalarySheet() {
     endDate: monthEnd,
   })
 
-  useEffect(() => {
-    supabase.auth
-      .getUser()
-      .then(({ data: { user } }) => {
-        if (user) {
-          return supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-            .then(({ data }) => setProfile(data))
-        }
-      })
-      .catch(() => setProfile(null))
-  }, [])
-
-  const isAdmin = profile?.role === 'admin'
-
   const monthOptions = useMemo(() => {
     const options = []
     const now = new Date()
-    const limit = isAdmin ? 12 : 1
+    const limit = 12
     for (let i = 0; i < limit; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -50,7 +30,7 @@ export function SalarySheet() {
       options.push({ value: val, label })
     }
     return options
-  }, [isAdmin])
+  }, [])
 
   const salaryData = useMemo(() => {
     const [year, month] = selectedMonth.split('-').map(Number)

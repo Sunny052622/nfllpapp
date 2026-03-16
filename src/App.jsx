@@ -1,11 +1,11 @@
 import { Component } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { ProtectedRoute } from './components/ProtectedRoute'
-import { Login } from './pages/Login'
-import { SetupDemo } from './pages/SetupDemo'
+import { UserPicker } from './pages/UserPicker'
 import { EntryForm } from './pages/EntryForm'
 import { SalarySheet } from './pages/SalarySheet'
 import { AdminDashboard } from './pages/AdminDashboard'
+import { AdminGate } from './components/AdminGate'
+import { getUser } from './lib/userStore'
 
 class ErrorBoundary extends Component {
   state = { hasError: false }
@@ -37,39 +37,23 @@ class ErrorBoundary extends Component {
   }
 }
 
+function RequireUser({ children }) {
+  const user = getUser()
+  if (!user) return <Navigate to="/pick-user" replace />
+  return children
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/setup" element={<SetupDemo />} />
-        <Route
-          path="/entry"
-          element={
-            <ProtectedRoute>
-              <EntryForm />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/salary"
-          element={
-            <ProtectedRoute>
-              <SalarySheet />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/" element={<Navigate to="/entry" replace />} />
-        <Route path="*" element={<Navigate to="/entry" replace />} />
+          <Route path="/pick-user" element={<UserPicker />} />
+          <Route path="/entry" element={<RequireUser><EntryForm /></RequireUser>} />
+          <Route path="/salary" element={<RequireUser><SalarySheet /></RequireUser>} />
+          <Route path="/admin" element={<RequireUser><AdminGate><AdminDashboard /></AdminGate></RequireUser>} />
+          <Route path="/" element={<Navigate to="/entry" replace />} />
+          <Route path="*" element={<Navigate to="/entry" replace />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

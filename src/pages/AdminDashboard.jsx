@@ -17,7 +17,7 @@ import {
 import { Layout } from '../components/Layout'
 import { useEntries } from '../hooks/useEntries'
 import { useEmployees } from '../hooks/useEmployees'
-import { useProfiles } from '../hooks/useProfiles'
+import { USERS } from '../data/users'
 import { LOCATIONS } from '../data/rowMaster'
 
 const HEADERS = [
@@ -97,7 +97,6 @@ export function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
 
-  const { profiles } = useProfiles()
   const { employees } = useEmployees()
 
   const dateRange = useMemo(() => {
@@ -113,12 +112,6 @@ export function AdminDashboard() {
     location: locationFilter || undefined,
     enteredBy: enteredByFilter || undefined,
   })
-
-  const profileMap = useMemo(() => {
-    const m = {}
-    for (const p of profiles) m[p.id] = p.name
-    return m
-  }, [profiles])
 
   const filteredEntries = useMemo(() => {
     let list = [...entries]
@@ -226,10 +219,7 @@ export function AdminDashboard() {
 
   const handleExportCSV = () => {
     const cols = ['entry_date', 'header', 'location', 'h1', 'amount', 'note', 'entered_by']
-    const rows = filteredEntries.map((e) => ({
-      ...e,
-      entered_by: profileMap[e.entered_by] ?? e.entered_by,
-    }))
+    const rows = [...filteredEntries]
     const csv = toCSV(rows, cols)
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -329,9 +319,9 @@ export function AdminDashboard() {
                 className="w-full px-3 py-2 rounded-lg border border-gray-300"
               >
                 <option value="">All</option>
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
+                {USERS.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
                   </option>
                 ))}
               </select>
@@ -515,7 +505,7 @@ export function AdminDashboard() {
                         <td className="px-4 py-2 max-w-[120px] truncate" title={e.note}>
                           {e.note || '-'}
                         </td>
-                        <td className="px-4 py-2">{profileMap[e.entered_by] ?? '-'}</td>
+                        <td className="px-4 py-2">{e.entered_by || '-'}</td>
                         <td className="px-4 py-2">
                           <button
                             onClick={() => setDeleteConfirm(e.id)}

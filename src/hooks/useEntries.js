@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { getUser } from '../lib/userStore'
 
 export function useEntries(filters = {}) {
   const { date, header, location, enteredBy, startDate, endDate } = filters
@@ -48,12 +49,12 @@ export function useEntries(filters = {}) {
 
   const addEntry = useCallback(
     async (entry) => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return { error: 'Not authenticated' }
+      const currentUser = getUser()
+      if (!currentUser) return { error: 'No user selected' }
 
       const { error: err } = await supabase.from('entries').insert({
         ...entry,
-        entered_by: user.id,
+        entered_by: currentUser,
         location: entry.location || '',
       })
 

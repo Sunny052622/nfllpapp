@@ -1,50 +1,33 @@
-import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { getUser, clearUser } from '../lib/userStore'
 
 export function Layout({ children }) {
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-          if (!error) setIsAdmin(data?.role === 'admin')
-        }
-      } catch (err) {
-        console.error('Layout init error:', err)
-      }
-    }
-    init()
-  }, [])
   const navigate = useNavigate()
+  const currentUser = getUser()
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    navigate('/login')
+  const handleSwitchUser = () => {
+    clearUser()
+    navigate('/pick-user')
   }
 
   const navItems = [
     { to: '/entry', label: 'Entry' },
     { to: '/salary', label: 'Salary Sheet' },
-    ...(isAdmin ? [{ to: '/admin', label: 'Dashboard' }] : []),
+    { to: '/admin', label: 'Dashboard' },
   ]
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-16">
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-900">Expense Tracker</h1>
+        <h1 className="text-lg font-semibold text-gray-900">
+          Expense Tracker
+          {currentUser && <span className="text-sm font-normal text-gray-500 ml-2">({currentUser})</span>}
+        </h1>
         <button
-          onClick={handleSignOut}
+          onClick={handleSwitchUser}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
-          Sign Out
+          Switch User
         </button>
       </header>
 
