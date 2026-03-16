@@ -12,7 +12,8 @@ export function Layout({ children }) {
 
   const navItems = [
     { to: '/entry', label: 'Entry' },
-    { to: '/salary', label: 'Salary Sheet' },
+    { to: '/salary', label: 'Salary' },
+    { to: '/leaves', label: 'Leaves' },
     { to: '/admin', label: 'Dashboard' },
   ]
 

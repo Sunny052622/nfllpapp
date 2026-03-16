@@ -4,6 +4,7 @@ import { UserPicker } from './pages/UserPicker'
 import { EntryForm } from './pages/EntryForm'
 import { SalarySheet } from './pages/SalarySheet'
 import { AdminDashboard } from './pages/AdminDashboard'
+import { Leaves } from './pages/Leaves'
 import { AdminGate } from './components/AdminGate'
 import { getUser } from './lib/userStore'
 
@@ -51,6 +52,7 @@ function App() {
           <Route path="/pick-user" element={<UserPicker />} />
           <Route path="/entry" element={<RequireUser><EntryForm /></RequireUser>} />
           <Route path="/salary" element={<RequireUser><SalarySheet /></RequireUser>} />
+          <Route path="/leaves" element={<RequireUser><Leaves /></RequireUser>} />
           <Route path="/admin" element={<RequireUser><AdminGate><AdminDashboard /></AdminGate></RequireUser>} />
           <Route path="/" element={<Navigate to="/entry" replace />} />
           <Route path="*" element={<Navigate to="/entry" replace />} />
