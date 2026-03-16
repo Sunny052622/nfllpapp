@@ -158,7 +158,7 @@ export function EntryForm() {
         .filter(
           (e) =>
             e.header === 'Advance' &&
-            e.employee_id === emp.id &&
+            Number(e.employee_id) === Number(emp.id) &&
             e.entry_date >= monthStart &&
             e.entry_date <= monthEnd
         )

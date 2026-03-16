@@ -201,7 +201,7 @@ export function AdminDashboard() {
         .filter(
           (e) =>
             e.header === 'Advance' &&
-            e.employee_id === emp.id &&
+            Number(e.employee_id) === Number(emp.id) &&
             e.entry_date >= start &&
             e.entry_date <= end
         )
