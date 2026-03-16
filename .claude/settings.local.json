@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find . -name *.log -o -name *error* -o -name *crash*)",
+      "Bash(find D:/NFLLP -type f \\\\\\(-name *schema* -o -name *migration* -o -name *database* -o -name *db* -o -name *.sql \\\\\\))",
+      "Bash(find D:/NFLLP -type f \\\\\\(-name *.jsx -o -name *.js -o -name *.ts -o -name *.tsx \\\\\\) ! -path */node_modules/* ! -path */dist/*)",
+      "Bash(grep -r \"prisma\\\\|drizzle\\\\|typeorm\\\\|sequelize\" D:/NFLLP --include=*.json --include=*.js --include=*.ts --exclude-dir=node_modules)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"schema\\\\|migration\\\\|unable to login\\\\|authentication failed\\\\|relation does not exist\\\\|table not found\\\\|column not found\" D:/NFLLP/src D:/NFLLP/*.md)"
+    ]
+  }
+}
