@@ -199,18 +199,9 @@ export function EntryForm() {
   return (
     <Layout>
       <div className="max-w-md mx-auto">
-        {/* Date bar */}
-        <div
-          className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between"
-          onClick={() => setShowCalendar(true)}
-        >
-          <span className="text-lg font-medium text-gray-900">📅 {formatDate(selectedDate)}</span>
-          <span className="text-gray-400 text-sm">Tap to change</span>
-        </div>
-
         {showCalendar && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center">
-            <div className="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-4 max-h-[80vh] overflow-auto">
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-sm rounded-2xl p-4 max-h-[80vh] overflow-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Select date</h2>
                 <button
@@ -236,8 +227,15 @@ export function EntryForm() {
           <div className="p-8 text-center text-gray-500">Loading...</div>
         ) : (
           <div className="px-4 py-4 space-y-4">
-            {/* Search bar */}
-            <div className="sticky top-12 z-[9] bg-white pb-2 pt-1">
+            {/* Date + Search bar — sticky under header */}
+            <div className="sticky top-[48px] z-[9] bg-white pb-2 pt-1 -mx-4 px-4 border-b border-gray-100">
+              <div
+                className="flex items-center justify-between py-2 mb-2 cursor-pointer"
+                onClick={() => setShowCalendar(true)}
+              >
+                <span className="text-sm font-medium text-gray-900">📅 {formatDate(selectedDate)}</span>
+                <span className="text-gray-400 text-xs">Change</span>
+              </div>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                 <input
@@ -245,7 +243,7 @@ export function EntryForm() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search category, location, employee..."
-                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
                 />
                 {searchQuery && (
                   <button
