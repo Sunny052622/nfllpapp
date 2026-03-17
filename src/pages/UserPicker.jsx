@@ -11,18 +11,22 @@ export function UserPicker() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
-          Expense Tracker
-        </h1>
-        <p className="text-gray-500 text-center mb-8">Who is entering today?</p>
+    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-indigo-600 to-indigo-800 px-6">
+      <div className="w-full max-w-xs">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">💼</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-1">NFLLP</h1>
+          <p className="text-indigo-200 text-sm">Expense Tracker</p>
+        </div>
+        <p className="text-indigo-200 text-xs text-center mb-4">Who is entering today?</p>
         <div className="space-y-3">
           {USERS.map((name) => (
             <button
               key={name}
               onClick={() => handlePick(name)}
-              className="w-full py-4 px-6 bg-indigo-600 text-white text-lg font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 min-h-[56px]"
+              className="w-full py-4 px-6 bg-white text-indigo-700 text-lg font-semibold rounded-2xl active:scale-[0.98] transition-transform shadow-lg"
             >
               {name}
             </button>

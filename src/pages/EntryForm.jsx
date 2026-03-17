@@ -6,12 +6,12 @@ import { useEntries } from '../hooks/useEntries'
 import { useEmployees } from '../hooks/useEmployees'
 import { ENTRY_ROW_MASTER, LOCATIONS } from '../data/rowMaster'
 
-const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-function formatDate(d) {
+function formatDateShort(d) {
   const date = typeof d === 'string' ? new Date(d + 'T00:00:00') : d
-  return `${WEEKDAY_NAMES[date.getDay()]}, ${date.getDate()} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`
+  return `${WEEKDAY_SHORT[date.getDay()]}, ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`
 }
 
 function formatDateISO(d) {
@@ -198,283 +198,304 @@ export function EntryForm() {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto">
-        {showCalendar && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-sm rounded-2xl p-4 max-h-[80vh] overflow-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Select date</h2>
-                <button
-                  onClick={() => setShowCalendar(false)}
-                  className="text-indigo-600 font-medium"
-                >
-                  Done
-                </button>
-              </div>
-              <DayPicker
-                mode="single"
-                selected={new Date(selectedDate + 'T00:00:00')}
-                onSelect={(d) => {
-                  if (d) setSelectedDate(formatDateISO(d))
-                  setShowCalendar(false)
-                }}
-              />
-            </div>
+      {/* Sticky date + search bar */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between px-3 py-2">
+          <button
+            onClick={() => setShowCalendar(true)}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-800 active:bg-gray-100 rounded-lg px-2 py-1.5 -ml-2"
+          >
+            <span>📅</span>
+            <span>{formatDateShort(selectedDate)}</span>
+            <span className="text-gray-400 text-xs ml-1">▼</span>
+          </button>
+          <div className="text-xs text-gray-500">
+            Total: ₹{Object.values(headerTotals).reduce((s, v) => s + v, 0).toLocaleString('en-IN')}
           </div>
-        )}
-
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading...</div>
-        ) : (
-          <div className="px-4 py-4 space-y-4">
-            {/* Date + Search bar — sticky under header */}
-            <div className="sticky top-[48px] z-[9] bg-white pb-2 pt-1 -mx-4 px-4 border-b border-gray-100">
-              <div
-                className="flex items-center justify-between py-2 mb-2 cursor-pointer"
-                onClick={() => setShowCalendar(true)}
+        </div>
+        <div className="px-3 pb-2">
+          <div className="relative">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="w-full pl-8 pr-8 py-2 rounded-lg bg-gray-100 border-0 text-sm placeholder-gray-400 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 active:text-gray-600 w-5 h-5 flex items-center justify-center"
               >
-                <span className="text-sm font-medium text-gray-900">📅 {formatDate(selectedDate)}</span>
-                <span className="text-gray-400 text-xs">Change</span>
-              </div>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search category, location, employee..."
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              {isSearching && (
-                <p className="text-xs text-gray-500 mt-1 px-1">
-                  {Object.values(filteredRowGroups).reduce((s, r) => s + r.length, 0)} results in{' '}
-                  {Object.keys(filteredRowGroups).length} categories
-                </p>
-              )}
-            </div>
-
-            {Object.keys(filteredRowGroups).length === 0 && isSearching && (
-              <div className="text-center text-gray-500 py-8">No matching items found</div>
+                ✕
+              </button>
             )}
-
-            {Object.entries(filteredRowGroups).map(([header, rows]) => {
-              const isOpen = isSearching || expandedHeaders[header]
-              return (
-                <section key={header} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => toggleHeader(header)}
-                    className="w-full px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-gray-500 text-xs transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
-                      >
-                        ▶
-                      </span>
-                      <h3 className="font-semibold text-gray-900">{header}</h3>
-                      <span className="text-xs text-gray-400">({rows.length})</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-600">
-                      ₹{(headerTotals[header] || 0).toLocaleString('en-IN')}
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <div className="divide-y divide-gray-100">
-                      {rows.map((row) => {
-                        const key = `${row.header}|${row.location || ''}|${row.h1 || ''}`
-                        const total = rowTotals[key] || 0
-                        const count = rowCounts[key] || 0
-
-                        return (
-                          <div
-                            key={key}
-                            className="px-4 py-3 flex items-center justify-between gap-2"
-                          >
-                            <div className="min-w-0 flex-1">
-                              {row.location && (
-                                <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded mr-2">
-                                  {row.location}
-                                </span>
-                              )}
-                              <span className="text-gray-900">{row.h1 || row.header}</span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {total > 0 && (
-                                <span className="text-sm text-gray-600">
-                                  ₹{total.toLocaleString('en-IN')}
-                                  {count > 1 && ` · ${count} entries`}
-                                </span>
-                              )}
-                              <button
-                                onClick={() => openModal(row)}
-                                className="min-h-[48px] px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
-                              >
-                                + Add
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </section>
-              )
-            })}
-
-            {/* Salary section (read-only) */}
-            <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <h3 className="font-semibold text-gray-900">Salary — Balance</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">Name</th>
-                      <th className="text-left px-4 py-2 font-medium text-gray-600">Location</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-600">Salary</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-600">Advances</th>
-                      <th className="text-right px-4 py-2 font-medium text-gray-600">Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salaryAdvance.map((emp) => (
-                      <tr key={emp.id} className="border-b border-gray-100">
-                        <td className="px-4 py-2">{emp.name}</td>
-                        <td className="px-4 py-2">{emp.location}</td>
-                        <td className="px-4 py-2 text-right">₹{emp.monthly_salary?.toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2 text-right">₹{emp.advances.toLocaleString('en-IN')}</td>
-                        <td
-                          className={`px-4 py-2 text-right font-medium ${
-                            emp.balance < 0 ? 'text-red-600' : 'text-green-600'
-                          }`}
-                        >
-                          ₹{emp.balance.toLocaleString('en-IN')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
           </div>
-        )}
+          {isSearching && (
+            <p className="text-[10px] text-gray-400 mt-1 px-1">
+              {Object.values(filteredRowGroups).reduce((s, r) => s + r.length, 0)} results
+            </p>
+          )}
+        </div>
+      </div>
 
-        {/* Add entry modal */}
-        {modalRow && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[85vh] overflow-auto">
-              <h3 className="text-lg font-semibold mb-4">
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-gray-400 text-sm">Loading...</div>
+        </div>
+      ) : (
+        <div className="px-3 py-3 space-y-2">
+          {Object.keys(filteredRowGroups).length === 0 && isSearching && (
+            <div className="text-center text-gray-400 py-12 text-sm">No matching items</div>
+          )}
+
+          {Object.entries(filteredRowGroups).map(([header, rows]) => {
+            const isOpen = isSearching || expandedHeaders[header]
+            const total = headerTotals[header] || 0
+            return (
+              <section key={header} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => toggleHeader(header)}
+                  className="w-full px-3 py-2.5 flex justify-between items-center active:bg-gray-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] text-gray-400 transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}
+                    >
+                      ▶
+                    </span>
+                    <span className="text-sm font-semibold text-gray-900">{header}</span>
+                    <span className="text-[10px] text-gray-400 bg-gray-100 rounded-full px-1.5 py-0.5">
+                      {rows.length}
+                    </span>
+                  </div>
+                  {total > 0 ? (
+                    <span className="text-xs font-medium text-indigo-600">
+                      ₹{total.toLocaleString('en-IN')}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-300">₹0</span>
+                  )}
+                </button>
+                {isOpen && (
+                  <div className="border-t border-gray-100">
+                    {rows.map((row) => {
+                      const key = `${row.header}|${row.location || ''}|${row.h1 || ''}`
+                      const total = rowTotals[key] || 0
+                      const count = rowCounts[key] || 0
+
+                      return (
+                        <div
+                          key={key}
+                          className="px-3 py-2 flex items-center justify-between border-b border-gray-50 last:border-b-0 active:bg-gray-50"
+                          onClick={() => openModal(row)}
+                        >
+                          <div className="min-w-0 flex-1 flex items-center gap-1.5">
+                            {row.location && (
+                              <span className="shrink-0 text-[10px] font-medium text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">
+                                {row.location}
+                              </span>
+                            )}
+                            <span className="text-sm text-gray-800 truncate">{row.h1 || row.header}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            {total > 0 && (
+                              <span className="text-xs text-gray-500">
+                                ₹{total.toLocaleString('en-IN')}
+                                {count > 1 && <span className="text-gray-400"> ({count})</span>}
+                              </span>
+                            )}
+                            <span className="w-7 h-7 flex items-center justify-center rounded-full bg-indigo-600 text-white text-sm font-bold">
+                              +
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </section>
+            )
+          })}
+
+          {/* Salary section (read-only) */}
+          <section className="bg-white rounded-xl overflow-hidden shadow-sm">
+            <div className="px-3 py-2.5">
+              <span className="text-sm font-semibold text-gray-900">Salary — Balance</span>
+            </div>
+            <div className="overflow-x-auto border-t border-gray-100">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="text-left px-3 py-2 font-medium text-gray-500">Name</th>
+                    <th className="text-left px-2 py-2 font-medium text-gray-500">Loc</th>
+                    <th className="text-right px-2 py-2 font-medium text-gray-500">Salary</th>
+                    <th className="text-right px-2 py-2 font-medium text-gray-500">Adv</th>
+                    <th className="text-right px-3 py-2 font-medium text-gray-500">Bal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salaryAdvance.map((emp) => (
+                    <tr key={emp.id} className="border-t border-gray-50">
+                      <td className="px-3 py-2 font-medium">{emp.name}</td>
+                      <td className="px-2 py-2 text-gray-500">{emp.location}</td>
+                      <td className="px-2 py-2 text-right">₹{emp.monthly_salary?.toLocaleString('en-IN')}</td>
+                      <td className="px-2 py-2 text-right">{emp.advances > 0 ? `₹${emp.advances.toLocaleString('en-IN')}` : '-'}</td>
+                      <td
+                        className={`px-3 py-2 text-right font-medium ${
+                          emp.balance < 0 ? 'text-red-600' : 'text-green-600'
+                        }`}
+                      >
+                        ₹{emp.balance.toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Bottom spacer */}
+          <div className="h-4" />
+        </div>
+      )}
+
+      {/* Calendar modal */}
+      {showCalendar && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={() => setShowCalendar(false)}>
+          <div className="bg-white w-full max-w-xs rounded-2xl p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-base font-semibold">Select date</h2>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="text-indigo-600 font-medium text-sm"
+              >
+                Done
+              </button>
+            </div>
+            <DayPicker
+              mode="single"
+              selected={new Date(selectedDate + 'T00:00:00')}
+              onSelect={(d) => {
+                if (d) setSelectedDate(formatDateISO(d))
+                setShowCalendar(false)
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Add entry modal — centered */}
+      {modalRow && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={closeModal}>
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="px-5 pt-5 pb-3">
+              <h3 className="text-base font-semibold text-gray-900">
                 {modalRow.isAdHoc
                   ? 'Advance (Ad-hoc)'
                   : [modalRow.header, modalRow.location, modalRow.h1].filter(Boolean).join(' · ')}
               </h3>
+            </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300"
-                  />
-                </div>
+            <div className="px-5 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm bg-gray-50"
+                />
+              </div>
 
-                {modalRow.isAdHoc && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                      <input
-                        type="text"
-                        value={modalAdHocName}
-                        onChange={(e) => setModalAdHocName(e.target.value)}
-                        placeholder="Employee name"
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                      <select
-                        value={modalAdHocLocation}
-                        onChange={(e) => setModalAdHocLocation(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300"
-                      >
-                        {LOCATIONS.map((loc) => (
-                          <option key={loc} value={loc}>
-                            {loc}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={modalAmount}
-                    onChange={(e) => setModalAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full px-4 py-3 text-lg rounded-lg border border-gray-300"
-                  />
-                </div>
-
-                {modalRow.requiresNote && (
+              {modalRow.isAdHoc && (
+                <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Note (required)</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
                     <input
                       type="text"
-                      value={modalNote}
-                      onChange={(e) => setModalNote(e.target.value)}
-                      placeholder="Description"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300"
+                      value={modalAdHocName}
+                      onChange={(e) => setModalAdHocName(e.target.value)}
+                      placeholder="Employee name"
+                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm"
                     />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Location</label>
+                    <select
+                      value={modalAdHocLocation}
+                      onChange={(e) => setModalAdHocLocation(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm bg-white"
+                    >
+                      {LOCATIONS.map((loc) => (
+                        <option key={loc} value={loc}>
+                          {loc}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Amount (₹)</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={modalAmount}
+                  onChange={(e) => setModalAmount(e.target.value)}
+                  placeholder="0"
+                  autoFocus
+                  className="w-full px-3 py-3 text-xl font-semibold rounded-lg border border-gray-200 text-center"
+                />
               </div>
 
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={closeModal}
-                  className="flex-1 py-3 rounded-lg border border-gray-300 text-gray-700 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEntry}
-                  disabled={saving}
-                  className="flex-1 py-3 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {saving ? 'Saving...' : 'Save Entry'}
-                </button>
-              </div>
+              {modalRow.requiresNote && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Note (required)</label>
+                  <input
+                    type="text"
+                    value={modalNote}
+                    onChange={(e) => setModalNote(e.target.value)}
+                    placeholder="Description"
+                    className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 flex gap-2">
+              <button
+                onClick={closeModal}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium active:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEntry}
+                disabled={saving}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-medium active:bg-indigo-700 disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {toast && (
-          <div
-            className={`fixed bottom-20 left-4 right-4 max-w-md mx-auto py-3 px-4 rounded-lg text-center font-medium z-50 ${
-              toast.type === 'error' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-            }`}
-          >
-            {toast.message}
-          </div>
-        )}
-      </div>
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed bottom-16 left-3 right-3 py-2.5 px-4 rounded-xl text-center text-sm font-medium z-50 shadow-lg ${
+            toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </Layout>
   )
 }

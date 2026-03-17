@@ -11,45 +11,51 @@ export function Layout({ children }) {
   }
 
   const navItems = [
-    { to: '/entry', label: 'Entry' },
-    { to: '/salary', label: 'Salary' },
-    { to: '/leaves', label: 'Leaves' },
-    { to: '/admin', label: 'Dashboard' },
+    { to: '/entry', label: 'Entry', icon: '📝' },
+    { to: '/salary', label: 'Salary', icon: '💰' },
+    { to: '/leaves', label: 'Leaves', icon: '📅' },
+    { to: '/admin', label: 'Admin', icon: '⚙️' },
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-16">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-900">
-          Expense Tracker
-          {currentUser && <span className="text-sm font-normal text-gray-500 ml-2">({currentUser})</span>}
-        </h1>
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Compact header */}
+      <header className="shrink-0 bg-indigo-600 text-white px-4 py-2.5 flex items-center justify-between safe-top">
+        <div className="flex items-center gap-2">
+          <h1 className="text-base font-semibold">NFLLP</h1>
+          {currentUser && (
+            <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">{currentUser}</span>
+          )}
+        </div>
         <button
           onClick={handleSwitchUser}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-xs text-white/80 hover:text-white px-2 py-1"
         >
-          Switch User
+          Switch
         </button>
       </header>
 
-      <main className="flex-1 overflow-auto">
+      {/* Main content - fills remaining space and scrolls */}
+      <main className="flex-1 overflow-auto scroll-hide">
         {children}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-20">
-        <div className="flex justify-around max-w-md mx-auto">
-          {navItems.map(({ to, label }) => (
+      {/* Bottom tab bar */}
+      <nav className="shrink-0 bg-white border-t border-gray-200 safe-bottom">
+        <div className="flex">
+          {navItems.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex-1 py-4 text-center text-sm font-medium min-h-[48px] flex items-center justify-center ${
+                `flex-1 flex flex-col items-center py-2 text-[10px] font-medium ${
                   isActive
-                    ? 'text-indigo-600 border-t-2 border-indigo-600 -mt-px'
-                    : 'text-gray-500 border-t-2 border-transparent'
+                    ? 'text-indigo-600'
+                    : 'text-gray-400'
                 }`
               }
             >
+              <span className="text-lg leading-none mb-0.5">{icon}</span>
               {label}
             </NavLink>
           ))}
