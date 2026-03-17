@@ -201,7 +201,7 @@ export function EntryForm() {
       <div className="max-w-md mx-auto">
         {/* Date bar */}
         <div
-          className="sticky top-12 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between"
+          className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between"
           onClick={() => setShowCalendar(true)}
         >
           <span className="text-lg font-medium text-gray-900">📅 {formatDate(selectedDate)}</span>
@@ -237,7 +237,7 @@ export function EntryForm() {
         ) : (
           <div className="px-4 py-4 space-y-4">
             {/* Search bar */}
-            <div className="sticky top-[60px] z-[9] bg-white pb-2">
+            <div className="sticky top-12 z-[9] bg-white pb-2 pt-1">
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                 <input
@@ -374,8 +374,8 @@ export function EntryForm() {
 
         {/* Add entry modal */}
         {modalRow && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center">
-            <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 max-h-[90vh] overflow-auto">
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[85vh] overflow-auto">
               <h3 className="text-lg font-semibold mb-4">
                 {modalRow.isAdHoc
                   ? 'Advance (Ad-hoc)'
