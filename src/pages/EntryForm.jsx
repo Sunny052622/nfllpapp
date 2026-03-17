@@ -38,6 +38,8 @@ export function EntryForm() {
   const [modalAdHocLocation, setModalAdHocLocation] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [expandedHeaders, setExpandedHeaders] = useState({})
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { entries, loading, error: entriesError, addEntry, refetch } = useEntries({ date: selectedDate })
   const { employees, error: employeesError } = useEmployees()
@@ -147,6 +149,29 @@ export function EntryForm() {
 
   const rowGroups = useMemo(() => groupByHeader(ENTRY_ROW_MASTER), [])
 
+  const filteredRowGroups = useMemo(() => {
+    if (!searchQuery.trim()) return rowGroups
+    const q = searchQuery.toLowerCase()
+    const filtered = {}
+    for (const [header, rows] of Object.entries(rowGroups)) {
+      const matchingRows = rows.filter((row) => {
+        const searchable = [row.header, row.location, row.h1, row.employeeName]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        return searchable.includes(q)
+      })
+      if (matchingRows.length > 0) filtered[header] = matchingRows
+    }
+    return filtered
+  }, [rowGroups, searchQuery])
+
+  const toggleHeader = (header) => {
+    setExpandedHeaders((prev) => ({ ...prev, [header]: !prev[header] }))
+  }
+
+  const isSearching = searchQuery.trim().length > 0
+
   const salaryAdvance = useMemo(() => {
     const year = new Date(selectedDate).getFullYear()
     const month = new Date(selectedDate).getMonth()
@@ -210,59 +235,103 @@ export function EntryForm() {
         {loading ? (
           <div className="p-8 text-center text-gray-500">Loading...</div>
         ) : (
-          <div className="px-4 py-4 space-y-6">
-            {Object.entries(rowGroups).map(([header, rows]) => (
-              <section key={header} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                  <h3 className="font-semibold text-gray-900">{header}</h3>
-                  <span className="text-sm font-medium text-gray-600">
-                    ₹{(headerTotals[header] || 0).toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {rows.map((row, idx) => {
-                    const key = `${row.header}|${row.location || ''}|${row.h1 || ''}`
-                    const total = rowTotals[key] || 0
-                    const count = rowCounts[key] || 0
-                    const isSalary = row.header === 'Salary'
+          <div className="px-4 py-4 space-y-4">
+            {/* Search bar */}
+            <div className="sticky top-[60px] z-[9] bg-white pb-2">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search category, location, employee..."
+                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              {isSearching && (
+                <p className="text-xs text-gray-500 mt-1 px-1">
+                  {Object.values(filteredRowGroups).reduce((s, r) => s + r.length, 0)} results in{' '}
+                  {Object.keys(filteredRowGroups).length} categories
+                </p>
+              )}
+            </div>
 
-                    if (isSalary) return null
+            {Object.keys(filteredRowGroups).length === 0 && isSearching && (
+              <div className="text-center text-gray-500 py-8">No matching items found</div>
+            )}
 
-                    const label = [row.header, row.location, row.h1].filter(Boolean).join(' · ')
-
-                    return (
-                      <div
-                        key={key}
-                        className="px-4 py-3 flex items-center justify-between gap-2"
+            {Object.entries(filteredRowGroups).map(([header, rows]) => {
+              const isOpen = isSearching || expandedHeaders[header]
+              return (
+                <section key={header} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggleHeader(header)}
+                    className="w-full px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-gray-500 text-xs transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}
                       >
-                        <div className="min-w-0 flex-1">
-                          {row.location && (
-                            <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded mr-2">
-                              {row.location}
-                            </span>
-                          )}
-                          <span className="text-gray-900">{row.h1 || row.header}</span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {total > 0 && (
-                            <span className="text-sm text-gray-600">
-                              ₹{total.toLocaleString('en-IN')}
-                              {count > 1 && ` · ${count} entries`}
-                            </span>
-                          )}
-                          <button
-                            onClick={() => openModal(row)}
-                            className="min-h-[48px] px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+                        ▶
+                      </span>
+                      <h3 className="font-semibold text-gray-900">{header}</h3>
+                      <span className="text-xs text-gray-400">({rows.length})</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-600">
+                      ₹{(headerTotals[header] || 0).toLocaleString('en-IN')}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="divide-y divide-gray-100">
+                      {rows.map((row) => {
+                        const key = `${row.header}|${row.location || ''}|${row.h1 || ''}`
+                        const total = rowTotals[key] || 0
+                        const count = rowCounts[key] || 0
+
+                        return (
+                          <div
+                            key={key}
+                            className="px-4 py-3 flex items-center justify-between gap-2"
                           >
-                            + Add
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </section>
-            ))}
+                            <div className="min-w-0 flex-1">
+                              {row.location && (
+                                <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded mr-2">
+                                  {row.location}
+                                </span>
+                              )}
+                              <span className="text-gray-900">{row.h1 || row.header}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {total > 0 && (
+                                <span className="text-sm text-gray-600">
+                                  ₹{total.toLocaleString('en-IN')}
+                                  {count > 1 && ` · ${count} entries`}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => openModal(row)}
+                                className="min-h-[48px] px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+                              >
+                                + Add
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
 
             {/* Salary section (read-only) */}
             <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
